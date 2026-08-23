@@ -1,0 +1,41 @@
+name: recovery-ai
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: recovery
+      POSTGRES_PASSWORD: recovery_dev_password
+      POSTGRES_DB: recovery_ai
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recovery -d recovery_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://recovery:recovery_dev_password@db:5432/recovery_ai
+      SECRET_KEY: change-me-in-production-at-least-32-chars-long!!
+      WEBHOOK_SECRET: demo_webhook_secret_change_me
+      LLM_PROVIDER: mock            # switch to openai|groq and set the key for live AI narrative
+      ALLOW_UNSIGNED_WEBHOOKS: "false"
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

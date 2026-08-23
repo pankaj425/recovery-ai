@@ -1,0 +1,1 @@
+﻿"""RecoveryAI backend application package."""
