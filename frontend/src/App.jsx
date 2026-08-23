@@ -1,60 +1,48 @@
-import axios from 'axios'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
+import Layout from './components/Layout'
+import Login from './pages/Login'
+import Overview from './pages/Overview'
+import Opportunities from './pages/Opportunities'
+import OpportunityDetail from './pages/OpportunityDetail'
+import Transactions from './pages/Transactions'
+import Customers from './pages/Customers'
+import PaymentMethods from './pages/PaymentMethods'
+import Assistant from './pages/Assistant'
+import Analytics from './pages/Analytics'
+import Settings from './pages/Settings'
 
-export const TOKEN_KEY = 'recoveryai_token'
+function Protected({ children }) {
+  const { isAuthenticated } = useAuth()
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-})
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY)
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-
-  return config
-})
-
-api.interceptors.response.use(
-  (resp) => resp,
-  (error) => {
-    if (
-      error.response?.status === 401 &&
-      !window.location.pathname.includes('/login')
-    ) {
-      localStorage.removeItem(TOKEN_KEY)
-      window.location.href = '/login'
-    }
-
-    return Promise.reject(error)
-  }
-)
-
-export const formatINR = (value, compact = false) => {
-  if (value == null || isNaN(value)) return '—'
-
-  if (compact) {
-    const abs = Math.abs(value)
-
-    if (abs >= 1e7) return `₹${(value / 1e7).toFixed(2)}Cr`
-    if (abs >= 1e5) return `₹${(value / 1e5).toFixed(2)}L`
-    if (abs >= 1e3) return `₹${(value / 1e3).toFixed(1)}K`
-  }
-
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(value)
+  return isAuthenticated ? children : <Navigate to="/login" replace />
 }
 
-export const formatPct = (value, decimals = 1) =>
-  value == null || isNaN(value)
-    ? '—'
-    : `${(value * 100).toFixed(decimals)}%`
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
 
-export default api
+      <Route
+        path="/"
+        element={
+          <Protected>
+            <Layout />
+          </Protected>
+        }
+      >
+        <Route index element={<Overview />} />
+        <Route path="opportunities" element={<Opportunities />} />
+        <Route path="opportunities/:id" element={<OpportunityDetail />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="customers" element={<Customers />} />
+        <Route path="payment-methods" element={<PaymentMethods />} />
+        <Route path="assistant" element={<Assistant />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}

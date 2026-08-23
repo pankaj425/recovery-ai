@@ -3,18 +3,29 @@ import { createContext, useContext, useEffect, useState } from 'react'
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
-  const [dark, setDark] = useState(() => localStorage.getItem('recoveryai_theme') !== 'light')
+  const [dark, setDark] = useState(() => {
+    return localStorage.getItem('recoveryai_theme') !== 'light'
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('recoveryai_theme', dark ? 'dark' : 'light')
+    localStorage.setItem(
+      'recoveryai_theme',
+      dark ? 'dark' : 'light'
+    )
   }, [dark])
 
+  const toggle = () => {
+    setDark((current) => !current)
+  }
+
   return (
-    <ThemeContext.Provider value={{ dark, toggle: () => setDark((d) => !d) }}>
+    <ThemeContext.Provider value={{ dark, toggle }}>
       {children}
     </ThemeContext.Provider>
   )
 }
 
-export const useTheme = () => useContext(ThemeContext)
+export function useTheme() {
+  return useContext(ThemeContext)
+}

@@ -2,33 +2,52 @@ import axios from 'axios'
 
 export const TOKEN_KEY = 'recoveryai_token'
 
-const api = axios.create({ baseURL: '/api/v1' })
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+
+console.log('API URL:', API_BASE_URL)
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+})
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY)
-  if (token) config.headers.Authorization = `Bearer ${token}`
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
   return config
 })
 
 api.interceptors.response.use(
-  (resp) => resp,
+  (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !window.location.hash.includes('login')) {
+    if (
+      error.response?.status === 401 &&
+      !window.location.pathname.includes('/login')
+    ) {
       localStorage.removeItem(TOKEN_KEY)
-      window.location.hash = '#/login'
+      localStorage.removeItem('recoveryai_user')
+      window.location.href = '/login'
     }
+
     return Promise.reject(error)
   }
 )
 
 export const formatINR = (value, compact = false) => {
   if (value == null || isNaN(value)) return '—'
+
   if (compact) {
     const abs = Math.abs(value)
+
     if (abs >= 1e7) return `₹${(value / 1e7).toFixed(2)}Cr`
     if (abs >= 1e5) return `₹${(value / 1e5).toFixed(2)}L`
     if (abs >= 1e3) return `₹${(value / 1e3).toFixed(1)}K`
   }
+
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -37,6 +56,8 @@ export const formatINR = (value, compact = false) => {
 }
 
 export const formatPct = (value, decimals = 1) =>
-  value == null || isNaN(value) ? '—' : `${(value * 100).toFixed(decimals)}%`
+  value == null || isNaN(value)
+    ? '—'
+    : `${(value * 100).toFixed(decimals)}%`
 
 export default api
