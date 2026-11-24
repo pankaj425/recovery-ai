@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import APIRouter, Query
 
 from app.api.deps import CurrentUser, DBSession
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import AppError, NotFoundError
 from app.models import RecoveryAction
 from app.repositories import opportunity_repository as opp_repo
 from app.schemas.common import paged
