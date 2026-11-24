@@ -5,8 +5,6 @@ export const TOKEN_KEY = 'recoveryai_token'
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
-console.log('API URL:', API_BASE_URL)
-
 const api = axios.create({
   baseURL: API_BASE_URL,
 })
@@ -30,7 +28,8 @@ api.interceptors.response.use(
     ) {
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem('recoveryai_user')
-      window.location.href = '/login'
+      // Respect Vite's base path (GitHub Pages serves from /recovery-ai/).
+      window.location.href = `${import.meta.env.BASE_URL}login`
     }
 
     return Promise.reject(error)
