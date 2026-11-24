@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import api, { formatINR, formatPct } from '../services/api'
 import { PriorityBadge, StatusBadge } from '../components/Badges'
 import DataTable, { Pagination } from '../components/DataTable'
@@ -10,10 +10,16 @@ const STATUSES = ['OPEN', 'IN_PROGRESS', 'RECOVERED', 'LOST', 'DISMISSED']
 const CAUSES = ['PAYMENT_METHOD_ISSUE', 'BANK_OR_NETWORK', 'FRAUD_OR_RISK', 'CUSTOMER_BEHAVIOR', 'SYSTEM']
 
 export default function Opportunities() {
+  const [searchParams] = useSearchParams()
   const [items, setItems] = useState(null)
   const [meta, setMeta] = useState({ total_items: 0, total_pages: 1 })
   const [error, setError] = useState(null)
-  const [filters, setFilters] = useState({ priority: '', status: '', root_cause: '', search: '' })
+  const [filters, setFilters] = useState(() => ({
+    priority: '',
+    status: '',
+    root_cause: '',
+    search: searchParams.get('search') || '',
+  }))
   const [sort, setSort] = useState('expected_recovery_value')
   const [page, setPage] = useState(1)
 
