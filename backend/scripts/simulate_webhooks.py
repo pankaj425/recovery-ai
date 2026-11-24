@@ -66,12 +66,12 @@ def existing_customers() -> list[str]:
         return [row[0] for row in db.query(Customer.external_customer_id).all()] or ["cus_walkin"]
 
 
-def post_mode(url: str, count: int) -> None:
+def post_mode(url: str, count: int, secret: str | None = None) -> None:
     import httpx
 
     from app.core.config import settings
 
-    secret = settings.webhook_secret
+    secret = secret or settings.webhook_secret
     rng = random.Random(2026)
     customer_ids = existing_customers()
     ok = dup = err = 0
@@ -129,12 +129,17 @@ def main() -> None:
     parser.add_argument("--url", default="http://localhost:8000")
     parser.add_argument("--count", type=int, default=50)
     parser.add_argument("--mode", choices=["http", "db"], default="http")
+    parser.add_argument(
+        "--secret",
+        default=None,
+        help="Webhook signing secret (defaults to local WEBHOOK_SECRET; set this for a hosted API)",
+    )
     args = parser.parse_args()
 
     if args.mode == "db":
         db_mode(args.count)
     else:
-        post_mode(args.url, args.count)
+        post_mode(args.url, args.count, secret=args.secret)
 
 
 if __name__ == "__main__":
