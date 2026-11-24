@@ -88,12 +88,18 @@ def backfill_opportunities(session) -> int:
     return total
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Seed the RecoveryAI database")
     parser.add_argument("--customers", type=int, default=5000)
     parser.add_argument("--transactions", type=int, default=20000)
     parser.add_argument("--keep", action="store_true", help="do not drop existing tables")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if args.keep:
+        with SessionLocal() as check:
+            if check.query(Customer.id).first() is not None:
+                print("Database already seeded; --keep leaves existing data untouched.")
+                return
 
     started = time.time()
     if not args.keep:
