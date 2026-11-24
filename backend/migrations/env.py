@@ -10,7 +10,8 @@ from app.core.database import Base
 import app.models  # noqa: F401  (register all mappings)
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# ConfigParser treats % as interpolation; escape it for URL-encoded credentials.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
