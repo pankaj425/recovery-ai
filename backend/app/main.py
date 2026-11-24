@@ -16,10 +16,38 @@ from app.utils.rate_limit import RateLimitMiddleware
 logger = logging.getLogger("recoveryai.main")
 
 
+def _seed_if_empty() -> None:
+    """Populate a fresh demo database when running on ephemeral hosting."""
+    if not settings.seed_on_startup:
+        return
+
+    from sqlalchemy import func, select
+
+    from app.core.database import SessionLocal
+    from app.models import Customer
+    from scripts.seed_database import main as seed_main
+
+    with SessionLocal() as db:
+        count = db.scalar(select(func.count(Customer.id))) or 0
+    if count:
+        return
+
+    logger.info("Seeding fresh demo database (this runs once per empty database)")
+    seed_main(
+        [
+            "--customers",
+            str(settings.seed_customers),
+            "--transactions",
+            str(settings.seed_transactions),
+        ]
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
     init_db()
+    _seed_if_empty()
     # Warm the ML artifact (trains deterministically on first run) and the demo user.
     from app.ml.model_registry import RecoveryProbabilityModel
     from app.services.auth_service import ensure_demo_user
