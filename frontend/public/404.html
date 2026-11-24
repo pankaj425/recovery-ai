@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>RecoveryAI</title>
+    <script>
+      // GitHub Pages has no SPA rewrite: send deep links back to the app root,
+      // then let index.html restore the original path via history.replaceState.
+      (function () {
+        var base = '/recovery-ai/';
+        var path = window.location.pathname;
+        var relative = path.indexOf(base) === 0
+          ? path.substring(base.length)
+          : path.replace(/^\//, '');
+        sessionStorage.setItem(
+          'recoveryai_redirect',
+          relative + window.location.search + window.location.hash
+        );
+        window.location.replace(base);
+      })();
+    </script>
+  </head>
+  <body>Redirecting to RecoveryAI…</body>
+</html>
