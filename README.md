@@ -52,6 +52,36 @@ Then seed once inside the container:
 docker compose exec api python scripts/seed_database.py
 ```
 
+## Live deployment (GitHub Pages + Render)
+
+The React dashboard is published to GitHub Pages and the FastAPI backend runs as a
+Docker web service on Render. `render.yaml` and
+`.github/workflows/deploy-pages.yml` contain the full configuration.
+
+1. **Backend:** in Render, create a new *Blueprint* from this repository. It reads
+   `render.yaml`, generates `SECRET_KEY` / `WEBHOOK_SECRET`, allows the Pages
+   origin via `CORS_ORIGINS`, and reseeds an empty demo database on first boot.
+   Wait until `GET /api/v1/health` returns `{"status":"ok"}`.
+2. **Frontend:** in this GitHub repo go to **Settings → Secrets and variables →
+   Actions → Variables** and add `VITE_API_URL` =
+   `https://<your-render-service>.onrender.com/api/v1`.
+3. **Pages:** go to **Settings → Pages → Build and deployment → Source** and
+   choose **GitHub Actions**.
+4. Push to `main` (or re-run the *Deploy frontend to GitHub Pages* workflow).
+   The site will be live at `https://pankaj425.github.io/recovery-ai/`.
+
+Login with **merchant@recovery.ai / demo1234**. All recovery actions are
+simulated. To replay the webhook demo against the hosted API, pass the Render
+webhook secret:
+
+```bash
+python scripts/simulate_webhooks.py --url https://<your-render-service>.onrender.com --count 25 --secret <WEBHOOK_SECRET>
+```
+
+> Free-tier services sleep when idle, so the first request after inactivity can
+> take ~30–60 seconds while the backend (and, after a restart, its demo data)
+> warms up.
+
 ## What's inside
 
 - **Webhook ingestion** — `POST /api/v1/webhook/payment-failed`, HMAC-SHA256
