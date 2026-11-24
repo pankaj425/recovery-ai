@@ -5,6 +5,7 @@ import json
 from functools import lru_cache
 from typing import Any
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _DEFAULT_WEIGHTS: dict[str, float] = {
@@ -32,10 +33,17 @@ class Settings(BaseSettings):
     demo_user_email: str = "merchant@recovery.ai"
     demo_user_password: str = "demo1234"
 
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080"
+    )
 
     webhook_secret: str = "demo-webhook-secret"
-    allow_unsigned_webhooks: bool = True
+    allow_unsigned_webhooks: bool = False
+
+    # Demo hosting: seed a fresh (ephemeral) database on first boot.
+    seed_on_startup: bool = False
+    seed_customers: int = 5000
+    seed_transactions: int = 20000
 
     llm_provider: str = "mock"
     openai_api_key: str = ""
@@ -57,6 +65,16 @@ class Settings(BaseSettings):
             "SYSTEM": 0.25,
         }
     )
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> "Settings":
+        if self.environment.lower() in {"local", "dev", "development", "test", "testing"}:
+            return self
+        if self.secret_key.startswith("change-me") or len(self.secret_key) < 32:
+            raise ValueError("SECRET_KEY must be a strong non-placeholder value outside local development")
+        if self.allow_unsigned_webhooks:
+            raise ValueError("ALLOW_UNSIGNED_WEBHOOKS must be false outside local development")
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:
