@@ -23,7 +23,8 @@ export default function Settings() {
     return () => { alive = false }
   }, [])
 
-  const secret = import.meta.env.VITE_WEBHOOK_SECRET || '(set WEBHOOK_SECRET on the backend — dev mode accepts unsigned webhooks)'
+  const apiBase = import.meta.env.VITE_API_URL || '/api/v1'
+  const docsUrl = `${apiBase.replace(/\/api\/v1\/?$/, '')}/docs`
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -42,8 +43,8 @@ export default function Settings() {
 
       <section className="card p-5">
         <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Server size={15} /> Backend API</h2>
-        <Row k="Base URL" v="/api/v1 (proxied to FastAPI on :8000)" mono />
-        <Row k="Docs" v={<a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" className="text-brand-600 hover:underline dark:text-brand-400">Swagger UI</a>} />
+        <Row k="Base URL" v={apiBase} mono />
+        <Row k="Docs" v={<a href={docsUrl} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline dark:text-brand-400">Swagger UI</a>} />
         <Row k="Rate limit" v="120 requests / minute / IP" />
       </section>
 
@@ -60,7 +61,9 @@ export default function Settings() {
         <Row k="Signature header" v="X-Signature (HMAC-SHA256 of raw body)" mono />
         <Row k="Signing secret" v={
           <button onClick={() => setWebhookSecretVisible((s) => !s)} className="text-brand-600 hover:underline dark:text-brand-400">
-            {webhookSecretVisible ? secret : '•••••••••••• reveal'}
+            {webhookSecretVisible
+              ? 'Configured on the backend (never shipped to the browser)'
+              : '•••••••••••• reveal'}
           </button>
         } />
         <Row k="Idempotency" v="event_id unique — duplicates are ignored" />
