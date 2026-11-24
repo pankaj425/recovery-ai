@@ -6,6 +6,16 @@
     <title>RecoveryAI — Revenue Recovery Intelligence</title>
   </head>
   <body>
+    <script>
+      // Restore a deep link after the GitHub Pages 404.html redirect.
+      (function () {
+        var redirect = sessionStorage.getItem('recoveryai_redirect');
+        if (redirect) {
+          sessionStorage.removeItem('recoveryai_redirect');
+          window.history.replaceState(null, '', '/recovery-ai/' + redirect);
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
