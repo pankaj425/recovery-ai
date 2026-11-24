@@ -3,6 +3,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --no-fund --no-audit || npm install --no-fund --no-audit
 COPY . .
+
+# Same-origin by default (nginx proxies /api/ to the backend). Override for Pages.
+ARG VITE_API_URL=/api/v1
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 FROM nginx:1.27-alpine
