@@ -46,12 +46,20 @@ def enqueue_webhook_event(event_dict: dict) -> None:
     """Process a webhook payload off-thread with its own DB session."""
 
     def job() -> None:
+        from sqlalchemy import select
+
+        from app.models import WebhookEvent
         from app.schemas.webhook import PaymentEventIn
         from app.services.webhook_service import process_event
 
         db = SessionLocal()
         try:
             process_event(db, PaymentEventIn.model_validate(event_dict))
+            event = db.scalar(
+                select(WebhookEvent).where(WebhookEvent.event_id == event_dict["event_id"])
+            )
+            if event:
+                event.processed = True
             db.commit()
         except Exception:  # noqa: BLE001
             db.rollback()
