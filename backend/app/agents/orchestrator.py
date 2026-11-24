@@ -255,12 +255,12 @@ def _compose_customer_detail(res: dict, _: str) -> AgentResult:
     c = data["customer"]
     methods = data["payment_methods"]
     best_method = methods[0]["method"] if methods else "n/a"
+    success_note = f"({pct(methods[0]['success_rate'], 0)} success)" if methods else "(no history yet)"
     opps = data["open_recovery_opportunities"]
     lines = [
         f"{c['name']} ({c['id']}) - segment {c['segment']}, LTV {inr(c['lifetime_value'])}.",
         f"History: {c['successful_transactions']} successful / {c['failed_transactions']} failed transactions.",
-        f"Best-performing method historically: {best_method} "
-        f"({pct(methods[0]['success_rate'], 0)} success) .",
+        f"Best-performing method historically: {best_method} {success_note}.",
     ]
     if opps:
         o = opps[0]
